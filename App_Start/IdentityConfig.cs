@@ -11,17 +11,38 @@ using Microsoft.AspNet.Identity.Owin;
 using Microsoft.Owin;
 using Microsoft.Owin.Security;
 using MVCAuthentication.Models;
+using SendGrid;
+using System.Net;
+using System.Configuration;
+using System.Diagnostics;
+using SendGrid.Helpers.Mail;
 
 namespace MVCAuthentication
 {
     public class EmailService : IIdentityMessageService
     {
-        public Task SendAsync(IdentityMessage message)
+        public async Task SendAsync(IdentityMessage message)
         {
             // Plug in your email service here to send an email.
-            return Task.FromResult(0);
+            await configSendGridasync(message);
+        }
+
+        private async Task configSendGridasync(IdentityMessage message)
+        {
+            var apiKey = ConfigurationManager.AppSettings["MVCAuthentication"];
+            var client = new SendGridClient(apiKey);
+            var newMessage = new SendGridMessage();
+            newMessage.AddTo(message.Destination);
+            newMessage.From = new EmailAddress("m.joynauth@gmail.com", "Mayur Joynauth");
+            newMessage.Subject = message.Subject;
+            newMessage.PlainTextContent = message.Body;
+            newMessage.HtmlContent = message.Body;
+
+            var response = await client.SendEmailAsync(newMessage);          
         }
     }
+
+    
 
     public class SmsService : IIdentityMessageService
     {
